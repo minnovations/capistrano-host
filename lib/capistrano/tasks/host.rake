@@ -9,7 +9,7 @@ namespace :host do
       sudo :rm, '-rf', '/etc/{.pwd.lock,group-,gshadow-,passwd-,shadow-}',
                        '/home/ec2-user/{.dbshell,.gem,.gnupg,.irb-history,.mongorc.js,.mysql_history,.node-gyp,.npm,.pki,.pry_history,.rnd,.viminfo}',
                        '/root/{.bash_history,.gem,.gnupg,.node-gyp,.npm,.pki,.rnd,.ssh,.viminfo}',
-                       '/tmp/{.ICE-unix,bundler*,spring}',
+                       '/tmp/{.ICE-unix,bundler*,motd.*,passenger_native_support*,spring}',
                        '/var/log/{*.0,*.gz,*.old}',
                        '/var/tmp/*'
     end
