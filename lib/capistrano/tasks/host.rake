@@ -119,6 +119,9 @@ namespace :host do
       sudo :cp, '-f', tmp_file, config_file_remote
       sudo :chmod, 'ugo+r', config_file_remote
       execute :rm, '-f', tmp_file
+
+      sudo :mkdir, '-p', '/home/mongod'
+      sudo :bash, '-c', '\'echo "/dev/xvdf /home/mongod ext4 defaults,noatime 0 0" >> /etc/fstab\''
     end
   end
 
