@@ -122,6 +122,7 @@ namespace :host do
 
       sudo :mkdir, '-p', '/home/mongod'
       sudo :bash, '-c', '\'echo "/dev/xvdf /home/mongod ext4 defaults,noatime 0 0" >> /etc/fstab\''
+      sudo :mount, '/home/mongod'
     end
   end
 
@@ -130,6 +131,56 @@ namespace :host do
     on roles(:mongod) do
       sudo :service, 'mongod', 'start'
       sudo :chkconfig, 'mongod', 'on'
+    end
+  end
+
+  desc 'Disable Transparent Huge Pages'
+  task :disable_thp do
+
+    init_script = <<-eos
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          disable-transparent-hugepages
+# Required-Start:    $local_fs
+# Required-Stop:
+# X-Start-Before:    mongod mongodb-mms-automation-agent
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Disable Linux transparent huge pages
+# Description:       Disable Linux transparent huge pages, to improve
+#                    database performance.
+### END INIT INFO
+
+case $1 in
+  start)
+    if [ -d /sys/kernel/mm/transparent_hugepage ]; then
+      thp_path=/sys/kernel/mm/transparent_hugepage
+    elif [ -d /sys/kernel/mm/redhat_transparent_hugepage ]; then
+      thp_path=/sys/kernel/mm/redhat_transparent_hugepage
+    else
+      return 0
+    fi
+
+    echo 'never' > ${thp_path}/enabled
+    echo 'never' > ${thp_path}/defrag
+
+    unset thp_path
+    ;;
+esac
+eos
+
+    init_script_local = StringIO.new(init_script)
+    init_script_remote = '/etc/init.d/disable-thp'
+    tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(10) { [*'0'..'9'].sample }.join}"
+
+    on roles(:mongod) do
+      upload! init_script_local, tmp_file
+      sudo :cp, '-f', tmp_file, init_script_remote
+      sudo :chmod, 'ugo+rx', init_script_remote
+      execute :rm, '-f', tmp_file
+
+      sudo :service, 'disable-thp', 'start'
+      sudo :chkconfig, 'disable-thp', 'on'
     end
   end
 end
