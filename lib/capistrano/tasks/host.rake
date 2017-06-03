@@ -1,5 +1,7 @@
 namespace :host do
+
   # Basic host setup tasks
+
   desc 'Perform initial basic host setup'
   task setup: [:set_ssh_authorized_keys, :update_system, :set_host_name, :configure_cron, :cleanup]
 
@@ -15,6 +17,7 @@ namespace :host do
                        '/var/tmp/*'
     end
   end
+
 
   desc 'Configure Cron'
   task :configure_cron do
@@ -36,6 +39,15 @@ namespace :host do
     end
   end
 
+
+  desc 'Run command'
+  task :run_command, :command do |t, args|
+    on roles(:all) do
+      sudo :bash, '-c', '-l', "\"#{args[:command]}\""
+    end
+  end
+
+
   desc 'Set host name'
   task :set_host_name do
     on roles(:all) do |host|
@@ -44,6 +56,7 @@ namespace :host do
       sudo :sed, '-i', "s/^HOSTNAME=.*/HOSTNAME=#{host_name}/g", '/etc/sysconfig/network'
     end
   end
+
 
   desc 'Set SSH authorized keys'
   task :set_ssh_authorized_keys do
@@ -56,6 +69,7 @@ namespace :host do
     end
   end
 
+
   desc 'Update system'
   task :update_system do
     on roles(:all) do
@@ -65,7 +79,34 @@ namespace :host do
   end
 
 
+
+
+  # Docker
+
+  desc 'Enable Docker'
+  task :enable_docker do
+    on roles(:docker) do
+      sudo :service, 'docker', 'start'
+      sudo :chkconfig, 'docker', 'on'
+    end
+  end
+
+
+  desc 'Install Docker'
+  task :install_docker do
+    on roles(:docker) do
+      sudo :yum, '-y', 'install', 'docker'
+      sudo :bash, '-c', '"(curl -Ls --retry 3 https://github.com/docker/compose/releases/download/1.13.0/docker-compose-Linux-x86_64 > /usr/bin/docker-compose) && chmod +x /usr/bin/docker-compose"'
+      sudo :bash, '-c', '"if id app ; then userdel -r app ; fi"'
+      sudo :useradd, 'app', '-c', 'app', '-M', '-u', '9999'
+    end
+  end
+
+
+
+
   # Memcached
+
   desc 'Configure Memcached'
   task :configure_memcached do
     on roles(:memcached) do
@@ -73,6 +114,7 @@ namespace :host do
       sudo :sed, '-i', "'s/^CACHESIZE=.*/CACHESIZE=\"#{cache_size}\"/'", '/etc/sysconfig/memcached'
     end
   end
+
 
   desc 'Enable Memcached'
   task :enable_memcached do
@@ -83,31 +125,10 @@ namespace :host do
   end
 
 
-  # Redis
-  desc 'Configure Redis'
-  task :configure_redis do
-    config_file_local = fetch(:redis_config_file_local, 'config/deploy/redis.conf')
-    config_file_remote = fetch(:redis_config_file_remote, '/etc/redis.conf')
-    tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(10) { [*'0'..'9'].sample }.join}"
-
-    on roles(:redis) do
-      upload! config_file_local, tmp_file
-      sudo :cp, '-f', tmp_file, config_file_remote
-      sudo :chmod, 'ugo+r', config_file_remote
-      execute :rm, '-f', tmp_file
-    end
-  end
-
-  desc 'Enable Redis'
-  task :enable_redis do
-    on roles(:redis) do
-      sudo :service, 'redis', 'start'
-      sudo :chkconfig, 'redis', 'on'
-    end
-  end
 
 
   # Mongo DB
+
   desc 'Configure Mongo DB server'
   task :configure_mongod do
     config_file_local = fetch(:mongod_config_file_local, 'config/deploy/mongod.conf')
@@ -126,13 +147,6 @@ namespace :host do
     end
   end
 
-  desc 'Enable Mongo DB server'
-  task :enable_mongod do
-    on roles(:mongod) do
-      sudo :service, 'mongod', 'start'
-      sudo :chkconfig, 'mongod', 'on'
-    end
-  end
 
   desc 'Disable Transparent Huge Pages'
   task :disable_thp do
@@ -181,6 +195,43 @@ eos
 
       sudo :service, 'disable-thp', 'start'
       sudo :chkconfig, 'disable-thp', 'on'
+    end
+  end
+
+
+  desc 'Enable Mongo DB server'
+  task :enable_mongod do
+    on roles(:mongod) do
+      sudo :service, 'mongod', 'start'
+      sudo :chkconfig, 'mongod', 'on'
+    end
+  end
+
+
+
+
+  # Redis
+
+  desc 'Configure Redis'
+  task :configure_redis do
+    config_file_local = fetch(:redis_config_file_local, 'config/deploy/redis.conf')
+    config_file_remote = fetch(:redis_config_file_remote, '/etc/redis.conf')
+    tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(10) { [*'0'..'9'].sample }.join}"
+
+    on roles(:redis) do
+      upload! config_file_local, tmp_file
+      sudo :cp, '-f', tmp_file, config_file_remote
+      sudo :chmod, 'ugo+r', config_file_remote
+      execute :rm, '-f', tmp_file
+    end
+  end
+
+
+  desc 'Enable Redis'
+  task :enable_redis do
+    on roles(:redis) do
+      sudo :service, 'redis', 'start'
+      sudo :chkconfig, 'redis', 'on'
     end
   end
 end
