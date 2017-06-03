@@ -3,7 +3,7 @@ namespace :host do
   # Basic host setup tasks
 
   desc 'Perform initial basic host setup'
-  task setup: [:set_ssh_authorized_keys, :update_system, :set_host_name, :configure_cron, :cleanup]
+  task setup: [:set_ssh_authorized_keys, :update_system, :set_host_name, :configure_cron, :install_docker, :enable_docker, :cleanup]
 
   desc 'Clean up'
   task :cleanup do
