@@ -40,6 +40,52 @@ namespace :host do
   end
 
 
+  desc 'Install backup data volume script'
+  task :install_backup_data_volume_script do
+    backup_script = <<-'eos'
+#!/usr/bin/env ruby
+require 'aws-sdk-v1'
+
+volume_device = ARGV[0]
+
+ec2 = AWS::EC2.new
+instance_id = Net::HTTP.get(URI.parse('http://169.254.169.254/latest/meta-data/instance-id'))
+volume_id = ec2.instances[instance_id].attachments[volume_device].volume.id
+
+backup_time = Time.now.utc
+backup_days = (ENV['BACKUP_DAYS'] ? ENV['BACKUP_DAYS'].to_i : 14)
+backup_tag = ENV['BACKUP_TAG'] || 'backup'
+
+# Create new backup snapshot
+new_snapshot = ec2.snapshots.create(:volume_id => volume_id)
+ec2.tags.create(new_snapshot, 'Name', :value => "#{backup_tag}-#{backup_time.strftime('%Y%m%dT%H%M%S')}")
+puts "Created #{new_snapshot.id}"
+
+# Delete expired backup snapshots
+snapshot_ids = ec2.snapshots.with_owner(:self).collect { |snapshot| snapshot.id if snapshot.volume_id == volume_id }.compact
+snapshot_ids.each do |snapshot_id|
+  snapshot = ec2.snapshots[snapshot_id]
+  if (backup_time - snapshot.start_time) > backup_days*24*60*60
+    snapshot.delete
+    puts "Deleted #{snapshot_id}"
+  end
+end
+
+exit
+eos
+    script_remote = 'bin/backup_data_volume'
+
+    on roles(:all) do
+      sudo :yum, '-y', 'install', 'ruby', 'ruby-devel'
+      sudo :gem, 'install', 'nokogiri', '-v=1.6.6.2', '--no-document'
+      sudo :gem, 'install', 'aws-sdk-v1', '-v=1.66.0', '--no-document'
+      execute :mkdir, '-p', File.dirname(script_remote)
+      upload! StringIO.new(backup_script), script_remote
+      execute :chmod, '+x', script_remote
+    end
+  end
+
+
   desc 'Run command'
   task :run_command, :command do |t, args|
     on roles(:all) do
@@ -204,6 +250,45 @@ eos
     on roles(:mongod) do
       sudo :service, 'mongod', 'start'
       sudo :chkconfig, 'mongod', 'on'
+    end
+  end
+
+
+
+
+  # MySQL
+
+  desc 'Configure MySQL DB server'
+  task :configure_mysql do
+    config_file_local = fetch(:mysql_config_file_local, 'config/deploy/my.cnf')
+    config_file_remote = fetch(:mysql_config_file_remote, '/etc/my.cnf')
+    tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(10) { [*'0'..'9'].sample }.join}"
+
+    on roles(:mysql) do
+      upload! config_file_local, tmp_file
+      sudo :cp, '-f', tmp_file, config_file_remote
+      sudo :chmod, 'ugo+r', config_file_remote
+      execute :rm, '-f', tmp_file
+
+      sudo :mkdir, '-p', '/home/mysql'
+      sudo :bash, '-c', "\"echo \\\"#{fetch(:mysql_data_volume_device, '/dev/xvdf')} /home/mysql ext4 defaults,noatime 0 0\\\" >> /etc/fstab\""
+    end
+  end
+
+
+  desc 'Enable MySQL DB server'
+  task :enable_mysql do
+    on roles(:mysql) do
+      sudo :chkconfig, 'mysqld', 'on'
+    end
+  end
+
+
+  desc 'Install MySQL DB server'
+  task :install_mysql do
+    on roles(:mysql) do
+      sudo :bash, '-c', '"for PKG in mysql-config mysql55 mysql55-libs ; do if (yum list installed \${PKG}) ; then yum -y erase \${PKG} ; fi ; done"'
+      sudo :yum, '-y', 'install', 'mysql56-server'
     end
   end
 
