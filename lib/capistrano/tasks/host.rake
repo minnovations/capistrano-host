@@ -188,8 +188,7 @@ eos
       execute :rm, '-f', tmp_file
 
       sudo :mkdir, '-p', '/home/mongod'
-      sudo :bash, '-c', '\'echo "/dev/xvdf /home/mongod ext4 defaults,noatime 0 0" >> /etc/fstab\''
-      sudo :mount, '/home/mongod'
+      sudo :bash, '-c', "\"echo \\\"#{fetch(:mongod_data_volume_device, '/dev/xvdf')} /home/mongod ext4 defaults,noatime 0 0\\\" >> /etc/fstab\""
     end
   end
 
@@ -248,7 +247,6 @@ eos
   desc 'Enable Mongo DB server'
   task :enable_mongod do
     on roles(:mongod) do
-      sudo :service, 'mongod', 'start'
       sudo :chkconfig, 'mongod', 'on'
     end
   end
