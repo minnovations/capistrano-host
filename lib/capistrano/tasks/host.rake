@@ -323,6 +323,7 @@ eos
   desc 'Install New Relic Servers'
   task :install_new_relic_servers do
     on roles(:all) do
+      sudo :bash, '-c', '"if rpm -q newrelic-repo ; then rpm -e newrelic-repo ; fi"'
       sudo :rpm, '-Uvh', 'https://yum.newrelic.com/pub/newrelic/el5/x86_64/newrelic-repo-5-3.noarch.rpm'
       sudo :yum, '-y', 'install', 'newrelic-sysmond'
     end
