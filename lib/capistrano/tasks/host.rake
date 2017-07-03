@@ -293,6 +293,44 @@ eos
 
 
 
+  # New Relic Servers
+
+  desc 'Configure New Relic Servers'
+  task :configure_new_relic_servers do
+    config_file_local = fetch(:new_relic_servers_config_file_local, 'config/deploy/nrsysmond.cfg')
+    config_file_remote = fetch(:new_relic_servers_config_file_remote, '/etc/newrelic/nrsysmond.cfg')
+    tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(10) { [*'0'..'9'].sample }.join}"
+
+    on roles(:all) do
+      upload! config_file_local, tmp_file
+      sudo :mkdir, '-p', File.dirname(config_file_remote)
+      sudo :cp, '-f', tmp_file, config_file_remote
+      sudo :chmod, 'ugo+r', config_file_remote
+      execute :rm, '-f', tmp_file
+    end
+  end
+
+
+  desc 'Enable New Relic Servers'
+  task :enable_new_relic_servers do
+    on roles(:all) do
+      sudo :service, 'newrelic-sysmond', 'start'
+      sudo :chkconfig, 'newrelic-sysmond', 'on'
+    end
+  end
+
+
+  desc 'Install New Relic Servers'
+  task :install_new_relic_servers do
+    on roles(:all) do
+      sudo :rpm, '-Uvh', 'https://yum.newrelic.com/pub/newrelic/el5/x86_64/newrelic-repo-5-3.noarch.rpm'
+      sudo :yum, '-y', 'install', 'newrelic-sysmond'
+    end
+  end
+
+
+
+
   # Redis
 
   desc 'Configure Redis'
