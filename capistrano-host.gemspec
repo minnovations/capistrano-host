@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.version       = '1.0.0'
   gem.authors       = ['M Innovations']
   gem.email         = ['contact@minnovations.sg']
-  gem.description   = 'Capistrano host tasks'
+  gem.description   = 'Capistrano plugin for host server related setup and maintenance tasks'
   gem.summary       = 'Capistrano host tasks'
 
   gem.files         = `git ls-files`.split($/)

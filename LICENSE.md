@@ -1,4 +1,4 @@
-Copyright (c) 2015 M Innovations
+Copyright (c) 2017 M Innovations
 
 MIT License
 
