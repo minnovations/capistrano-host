@@ -6,7 +6,7 @@ namespace :host do
 
   task :mysql_configure do
     on roles(:all) do
-      upload_file('config/my.cnf', '/etc/my.cnf')
+      upload_file("#{config_dir}/my.cnf", '/etc/my.cnf')
       sudo :mkdir, '-p', '/home/mysql'
 
       data_volume_device = fetch(:host_mysql_data_volume_device) || '/dev/xvdf'

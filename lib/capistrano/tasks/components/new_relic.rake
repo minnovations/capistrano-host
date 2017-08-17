@@ -7,7 +7,7 @@ namespace :host do
   task :new_relic_configure do
     on roles(:all) do
       sudo :mkdir, '-p', '/etc/newrelic'
-      upload_file('config/nrsysmond.cfg', '/etc/newrelic/nrsysmond.cfg')
+      upload_file("#{config_dir}/nrsysmond.cfg", '/etc/newrelic/nrsysmond.cfg')
     end
   end
 

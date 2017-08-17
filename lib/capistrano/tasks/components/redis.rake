@@ -6,7 +6,7 @@ namespace :host do
 
   task :redis_configure do
     on roles(:all) do
-      upload_file('config/redis.conf', '/etc/redis.conf')
+      upload_file("#{config_dir}/redis.conf", '/etc/redis.conf')
       sudo :sed, '-i', "'/^vm.overcommit_memory/d'", '/etc/sysctl.conf'
       sudo :bash, '-c', "\"echo \\\"vm.overcommit_memory = 1\\\" >> /etc/sysctl.conf\""
       sudo :sysctl, '-p'

@@ -6,7 +6,7 @@ namespace :host do
 
   task :mongo_configure do
     on roles(:all) do
-      upload_file('config/mongod.conf', '/etc/mongod.conf')
+      upload_file("#{config_dir}/mongod.conf", '/etc/mongod.conf')
       sudo :mkdir, '-p', '/home/mongod'
 
       data_volume_device = fetch(:host_mongo_data_volume_device) || '/dev/xvdf'

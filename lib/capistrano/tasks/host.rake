@@ -2,6 +2,11 @@ namespace :host do
 
   # Helper Methods
 
+  def config_dir
+    "config/#{fetch(:stage)}"
+  end
+
+
   def upload_file(file, dest_path, options={})
     mod = options[:mod] || 'u+rw,go+r'
     tmp_file = "#{fetch(:tmp_dir)}/#{Array.new(8) { [*'0'..'9'].sample }.join}"
@@ -75,10 +80,8 @@ namespace :host do
 
 
   task :base_configure_cron do
-    on roles(:all) do |host|
-      host_name = host.properties.host_name
-      upload_file('config/crontab', '/etc/cron.d/host') if File.exists?('config/crontab')
-      upload_file("config/crontab.#{host_name}", "/etc/cron.d/host-#{host_name}") if File.exists?("config/crontab.#{host_name}")
+    on roles(:all) do
+      upload_file("#{config_dir}/crontab", '/etc/cron.d/host') if File.exists?("#{config_dir}/crontab")
     end
   end
 
@@ -94,7 +97,7 @@ namespace :host do
 
   task :base_set_ssh_authorized_keys do
     on roles(:all) do
-      upload_file('config/authorized_keys', '.ssh/authorized_keys', mod: 'u+rw,go-rwx') if File.exists?('config/authorized_keys')
+      upload_file("#{config_dir}/authorized_keys", '.ssh/authorized_keys', mod: 'u+rw,go-rwx') if File.exists?("#{config_dir}/authorized_keys")
     end
   end
 
