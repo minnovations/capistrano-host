@@ -24,7 +24,7 @@ namespace :host do
 
   task :redis_install do
     on roles(:all) do
-      sudo :yum, '--enablerepo=epel', '-y', 'install', 'redis'
+      sudo :yum, '-y', 'install', 'https://dl.fedoraproject.org/pub/archive/epel/5/x86_64/redis-2.4.10-1.el5.x86_64.rpm'
     end
   end
 
