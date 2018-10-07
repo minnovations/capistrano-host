@@ -25,8 +25,8 @@ namespace :host do
 
   task :mysql_install do
     on roles(:all) do
-      sudo :bash, '-c', '"for PKG in mysql-config mysql55 mysql55-libs ; do if (yum list installed \${PKG}) ; then yum -y erase \${PKG} ; fi ; done"'
-      sudo :yum, '-y', 'install', 'mysql56-server'
+      sudo :bash, '-c', '"for PKG in mysql-config mysql55 mysql55-libs mysql56 mysql56-libs ; do if (yum list installed \${PKG}) ; then yum -y erase \${PKG} ; fi ; done"'
+      sudo :yum, '-y', 'install', 'mysql57-server'
     end
   end
 
