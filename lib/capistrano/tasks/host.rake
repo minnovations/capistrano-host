@@ -50,7 +50,7 @@ namespace :host do
         '/var/tmp/*'
       ]
       sudo :rm, '-fr', *paths_to_rm
-      sudo :bash, '-c', '-l', '"if pgrep -f docker > /dev/null ; then docker system prune -f ; fi"'
+      sudo :bash, '-c', '-l', '"if command -v docker > /dev/null ; then docker system prune -f ; fi"'
     end
   end
 
