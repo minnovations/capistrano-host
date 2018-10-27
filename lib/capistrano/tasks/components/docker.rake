@@ -7,6 +7,7 @@ namespace :host do
   task :docker_configure do
     on roles(:all) do
       sudo :usermod, '-a', '-G', 'docker', 'ec2-user'
+      sudo :sed, '-i', "'s/^OPTIONS=.*/OPTIONS=\"--default-ulimit nofile=1024:4096 --log-opt max-size=50m --log-opt max-file=5\"/'", '/etc/sysconfig/docker'
     end
   end
 
