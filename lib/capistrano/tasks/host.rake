@@ -41,7 +41,6 @@ namespace :host do
   task :cleanup do
     on roles(:all) do
       sudo :yum, '-y', 'clean', 'all'
-      sudo :docker, 'system', 'prune', '-f'
       paths_to_rm = [
         '/etc/{.pwd.lock,group-,gshadow-,passwd-,shadow-}',
         '/home/ec2-user/{.dbshell,.gem,.gnupg,.irb-history,.mongorc.js,.mysql_history,.node-gyp,.npm,.pki,.pry_history,.rnd,.viminfo}',
@@ -51,6 +50,7 @@ namespace :host do
         '/var/tmp/*'
       ]
       sudo :rm, '-fr', *paths_to_rm
+      sudo :bash, '-c', '-l', '"if pgrep -f docker > /dev/null ; then docker system prune -f ; fi"'
     end
   end
 
