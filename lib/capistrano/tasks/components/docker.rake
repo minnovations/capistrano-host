@@ -23,7 +23,7 @@ namespace :host do
   task :docker_install do
     on roles(:all) do
       sudo :yum, '-y', 'install', 'docker'
-      sudo :curl, '-Ls', '-o', '/usr/bin/docker-compose', '--retry', '3', 'https://github.com/docker/compose/releases/download/1.23.2/docker-compose-Linux-x86_64'
+      sudo :curl, '-Ls', '-o', '/usr/bin/docker-compose', '--retry', '3', 'https://github.com/docker/compose/releases/download/v2.14.2/docker-compose-linux-x86_64'
       sudo :chmod, '+x', '/usr/bin/docker-compose'
     end
   end
